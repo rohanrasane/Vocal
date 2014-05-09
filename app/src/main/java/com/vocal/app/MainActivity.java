@@ -422,7 +422,15 @@ public class MainActivity extends Activity {
         i.setPackage("com.whatsapp");           // so that only Whatsapp reacts and not the chooser
         i.putExtra(Intent.EXTRA_SUBJECT, "Subject");
         i.putExtra(Intent.EXTRA_TEXT, "I'm the body.");
-        startActivity(i);
+        if (i.resolveActivity(getPackageManager()) != null) {
+            startActivity(i);
+        }
+        else{
+            Toast t = Toast.makeText(getApplicationContext(),
+                    "Whatsapp Service is under maintainance ",
+                    Toast.LENGTH_SHORT);
+            t.show();
+        }
     }
 
 

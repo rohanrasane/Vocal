@@ -1,0 +1,118 @@
+<LinearLayout
+    android:orientation="vertical"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:weightSum="1">
+
+    <TextView
+        android:layout_width="153dp"
+        android:layout_height="wrap_content"
+        android:text="Enter Theme or Mood"
+        android:id="@+id/textView" />
+
+    <EditText
+        android:layout_width="213dp"
+        android:layout_height="wrap_content"
+        android:id="@+id/editText"
+        android:layout_alignParentEnd="true"
+        />
+
+    <Button
+        style="?android:attr/buttonStyleSmall"
+        android:layout_width="215dp"
+        android:layout_height="wrap_content"
+        android:text="Search"
+        android:id="@+id/buttonSearch"
+        android:onClick="HandleSearchClick"
+        />
+
+
+    <Button
+        style="?android:attr/buttonStyleSmall"
+        android:layout_width="215dp"
+        android:layout_height="wrap_content"
+        android:text="VoiceToText"
+        android:id="@+id/button"
+        android:onClick="HandleVoiceToTextClick"
+        />
+
+    <TextView
+        android:layout_width="227dp"
+        android:layout_height="wrap_content"
+        android:text="Album Name"
+        android:id="@+id/textView2"
+        android:layout_weight="0.11" />
+
+    <EditText
+        android:layout_width="213dp"
+        android:layout_height="wrap_content"
+        android:id="@+id/edittext2"
+        android:layout_alignParentEnd="true"
+        />
+
+    <TextView
+        android:layout_width="213dp"
+        android:layout_height="wrap_content"
+        android:text="Song Name"
+        android:id="@+id/textView3"
+        android:layout_weight="0.07" />
+
+    <EditText
+        android:layout_width="213dp"
+        android:layout_height="wrap_content"
+        android:id="@+id/edittext3"
+        android:layout_alignParentEnd="true"
+        />
+
+    <Button
+        style="?android:attr/buttonStyleSmall"
+        android:layout_width="215dp"
+        android:layout_height="wrap_content"
+        android:text="Next Song"
+        android:id="@+id/buttonNext"
+        android:onClick="HandleNextSongClick"
+        />
+
+    <TextView
+        android:layout_width="236dp"
+        android:layout_height="wrap_content"
+        android:text="Errors"
+        android:id="@+id/textView4"
+        android:layout_weight="0.12" />
+
+    <TextView
+        android:layout_width="213dp"
+        android:layout_height="wrap_content"
+        android:id="@+id/textView1"
+        android:layout_weight="0.08"
+        android:text="None :)" />
+
+    <Button
+        style="?android:attr/buttonStyleSmall"
+        android:layout_width="206dp"
+        android:layout_height="wrap_content"
+        android:text="VociceMaps"
+        android:id="@+id/buttonVoiceMaps"
+        android:onClick="HandleMapsClick"
+        />
+
+    <Button
+        style="?android:attr/buttonStyleSmall"
+        android:layout_width="206dp"
+        android:layout_height="wrap_content"
+        android:text="MapsFromSearchText"
+        android:id="@+id/buttonMaps"
+        android:onClick="HandleMapsClickSearchText"
+        />
+
+    <Button
+        style="?android:attr/buttonStyleSmall"
+        android:layout_width="206dp"
+        android:layout_height="wrap_content"
+        android:text="WhatsApp"
+        android:id="@+id/buttonWhatsAppMessage"
+        android:onClick="HandleWhatsAppClick"
+        />
+
+</LinearLayout>

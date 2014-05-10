@@ -2,11 +2,14 @@ package com.vocal.app;
 
 import android.app.Activity;
 import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.Intent;
+import android.database.Cursor;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Bundle;
+import android.provider.ContactsContract;
 import android.speech.RecognitionListener;
 import android.speech.RecognizerIntent;
 import android.speech.SpeechRecognizer;
@@ -28,6 +31,7 @@ import com.vocal.app.data.Track;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 import retrofit.Callback;
 import retrofit.RequestInterceptor;
@@ -413,24 +417,35 @@ public class MainActivity extends Activity {
         ShowDirectionOnMap(myTextView.getText().toString());
     }
 
+    public int getContactIDFromNumber(String contactNumber)
+    {
+        Context ctx = getApplicationContext();
+        contactNumber = Uri.encode(contactNumber);
+        int phoneContactID = new Random().nextInt();
+        Cursor contactLookupCursor = ctx.getContentResolver().query(Uri.withAppendedPath(ContactsContract.PhoneLookup.CONTENT_FILTER_URI,contactNumber),new String[] {ContactsContract.PhoneLookup.DISPLAY_NAME, ContactsContract.PhoneLookup._ID}, null, null, null);
+        while(contactLookupCursor.moveToNext()){
+            phoneContactID = contactLookupCursor.getInt(contactLookupCursor.getColumnIndexOrThrow(ContactsContract.PhoneLookup._ID));
+        }
+        contactLookupCursor.close();
+
+        return phoneContactID;
+    }
+
+
     public void HandleWhatsAppClick(View view) {
 
         EditText myTextView = (EditText)findViewById(R.id.editText);
+        int contactID = getContactIDFromNumber(myTextView.getText().toString());
 
-        Intent i = new Intent(Intent.ACTION_SENDTO, Uri.parse("content://com.android.contacts/data/" + myTextView.getText()));
-        i.setType("text/plain");
+
+        Intent i = new Intent(Intent.ACTION_SENDTO, Uri.parse("content://com.android.contacts/data/" + contactID));
+                i.setType("text/plain");
         i.setPackage("com.whatsapp");           // so that only Whatsapp reacts and not the chooser
         i.putExtra(Intent.EXTRA_SUBJECT, "Subject");
         i.putExtra(Intent.EXTRA_TEXT, "I'm the body.");
-        if (i.resolveActivity(getPackageManager()) != null) {
-            startActivity(i);
-        }
-        else{
-            Toast t = Toast.makeText(getApplicationContext(),
-                    "Whatsapp Service is under maintainance ",
-                    Toast.LENGTH_SHORT);
-            t.show();
-        }
+        startActivity(i);
+
+
     }
 
 

@@ -344,13 +344,15 @@ public class MainActivity extends Activity {
 
 
     public void PlayNextSong(){
-        RestAdapter restAdapter = new RestAdapter.Builder()
-                .setEndpoint(API_URL)
-                .setRequestInterceptor(requestInterceptor)
-                .setLogLevel(RestAdapter.LogLevel.FULL)
-                .build();
-        EightTracksNextSong eTracks = restAdapter.create(EightTracksNextSong.class);
-        eTracks.contributors("json",playToken,mixesList.get(0).getId().toString(),simpleCallback);
+        if(null != mixesList && null != playToken) {
+            RestAdapter restAdapter = new RestAdapter.Builder()
+                    .setEndpoint(API_URL)
+                    .setRequestInterceptor(requestInterceptor)
+                    .setLogLevel(RestAdapter.LogLevel.FULL)
+                    .build();
+            EightTracksNextSong eTracks = restAdapter.create(EightTracksNextSong.class);
+            eTracks.contributors("json", playToken, mixesList.get(0).getId().toString(), simpleCallback);
+        }
 
     }
 

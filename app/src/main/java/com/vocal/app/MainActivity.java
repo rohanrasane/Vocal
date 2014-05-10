@@ -18,6 +18,8 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -46,7 +48,6 @@ import retrofit.http.Query;
 public class MainActivity extends Activity {
 
 
-    private TextView txtText =null;
 
     private SpeechRecognizer sr;
 
@@ -67,7 +68,9 @@ public class MainActivity extends Activity {
     ProgressDialog mDialog = null;
 
 
-    Boolean isSongVoice = true;
+    Boolean isAddressSelected = false;
+
+    int mediaPlayerPausedPosition = 0;
 
 
     @Override
@@ -147,7 +150,7 @@ public class MainActivity extends Activity {
         public void success(Play o, Response response) {
             Set s = o.getSet();
             Track t = s.getTrack();
-            EditText myTextView = (EditText)findViewById(R.id.edittext3);
+            TextView myTextView = (TextView)findViewById(R.id.textViewSong);
             myTextView.setText(t.getName());
 
             String url = t.getUrl(); // your URL here
@@ -174,8 +177,12 @@ public class MainActivity extends Activity {
             }
             mDialog.dismiss();
             mMediaPlayer.start();
-
-
+            ImageButton btn=(ImageButton) findViewById(R.id.ImageButtonPlayPause);
+            btn.setImageResource(R.drawable.pause);
+            ImageView imgView = (ImageView)findViewById(R.id.ImageViewMusicBox);
+            imgView.setVisibility(View.VISIBLE);
+            ImageView imgView1 = (ImageView)findViewById(R.id.ImageViewDirectionsBox);
+            imgView1.setVisibility(View.INVISIBLE);
 
         }
 
@@ -206,7 +213,7 @@ public class MainActivity extends Activity {
 
                 String res = firstItem.getName();
 
-                EditText myTextView = (EditText) findViewById(R.id.edittext2);
+                TextView myTextView = (TextView) findViewById(R.id.textViewAlbum);
                 myTextView.setText(res);
 
 
@@ -265,7 +272,6 @@ public class MainActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        txtText = (TextView) findViewById(R.id.textView1);
         mDialog = new ProgressDialog(this);
         mDialog.setCancelable(false);
     }
@@ -294,10 +300,12 @@ public class MainActivity extends Activity {
         }
         public void onError(int error)
         {
-            Log.d(TAG,  "error " +  error);
-            txtText.setText("error " + error);
+            Log.d(TAG, "error " + error);
+            Toast t = Toast.makeText(getApplicationContext(),
+                    "Error " + error,
+                    Toast.LENGTH_SHORT);
+            t.show();
             mDialog.dismiss();
-            isSongVoice = true;
         }
         public void onResults(Bundle results)
         {
@@ -314,16 +322,7 @@ public class MainActivity extends Activity {
             String voiceData = data.get(0).toString();
             EditText myEditTextView = (EditText) findViewById(R.id.editText);
             myEditTextView.setText(voiceData);
-            if(false == isSongVoice){
-                ShowDirectionOnMap(voiceData);
-                isSongVoice = true;
-                txtText.setText("None :)");
-            }
-            else {
-
-                PlaySearchedMusic(voiceData);
-                txtText.setText("None :)");
-            }
+            Search(voiceData);
         }
         public void onPartialResults(Bundle partialResults)
         {
@@ -355,22 +354,6 @@ public class MainActivity extends Activity {
 
     }
 
-    public void HandleVoiceToTextClick(View view) {
-        if(null != sr && voiceIntent.resolveActivity(getPackageManager()) != null){
-            sr.startListening(voiceIntent);
-            mDialog.setMessage("Listening...");
-            mDialog.show();
-            Log.d(TAG, "Started Listening");
-        }
-        else{
-            Toast t = Toast.makeText(getApplicationContext(),
-                    "Speech Service is under maintainance ",
-                    Toast.LENGTH_SHORT);
-            t.show();
-        }
-    }
-
-
     public void PlaySearchedMusic(String strKeyword){
         RestAdapter restAdapter = new RestAdapter.Builder()
                 .setEndpoint(API_URL)
@@ -383,21 +366,66 @@ public class MainActivity extends Activity {
         mDialog.show();
     }
 
-    public void HandleSearchClick(View view) {
-        EditText myEditTextView = (EditText)findViewById(R.id.editText);
-        String searchField = myEditTextView.getText().toString();
-        PlaySearchedMusic(searchField);
-    }
-
-
     public void HandleNextSongClick(View view) {
         PlayNextSong();
     }
 
-    public void HandleMapsClick(View view) {
+    public void HandlePauseOnClick(View view) {
+        if(null != mMediaPlayer) {
+            ImageButton btn=(ImageButton) findViewById(R.id.ImageButtonPlayPause);
+            if (mMediaPlayer.isPlaying()) {
+                mMediaPlayer.pause();
+                mediaPlayerPausedPosition=mMediaPlayer.getCurrentPosition();
 
+                btn.setImageResource(R.drawable.play);
+            } else {
+                mMediaPlayer.seekTo(mediaPlayerPausedPosition);
+                mMediaPlayer.start();
+                btn.setImageResource(R.drawable.pause);
+            }
+            ImageView imgView = (ImageView)findViewById(R.id.ImageViewMusicBox);
+            imgView.setVisibility(View.VISIBLE);
+            ImageView imgView1 = (ImageView)findViewById(R.id.ImageViewDirectionsBox);
+            imgView1.setVisibility(View.INVISIBLE);
+        }
+    }
+
+
+    private void Search(String searchStr){
+        if(true == isAddressSelected){
+            ShowDirectionOnMap(searchStr);
+        }
+        else{
+            PlaySearchedMusic(searchStr);
+        }
+    }
+
+    public void HandleDirectionsOnClick(View view) {
+        isAddressSelected = true;
+        ImageView imgView = (ImageView)findViewById(R.id.ImageViewMusicBox);
+        imgView.setVisibility(View.INVISIBLE);
+        ImageView imgView1 = (ImageView)findViewById(R.id.ImageViewDirectionsBox);
+        imgView1.setVisibility(View.VISIBLE);
+    }
+
+    public void HandleMusicOnClick(View view) {
+        isAddressSelected = false;
+        ImageView imgView = (ImageView)findViewById(R.id.ImageViewMusicBox);
+        imgView.setVisibility(View.VISIBLE);
+        ImageView imgView1 = (ImageView)findViewById(R.id.ImageViewDirectionsBox);
+        imgView1.setVisibility(View.INVISIBLE);
+    }
+
+    public void HandleSearchOnClick(View view) {
+        EditText myEditTextView = (EditText) findViewById(R.id.editText);
+
+        Search(myEditTextView.getText().toString());
+    }
+
+    public void HandleListenOnClick(View view) {
+        EditText myEditTextView = (EditText) findViewById(R.id.editText);
+        myEditTextView.setText("");
         if(null != sr && voiceIntent.resolveActivity(getPackageManager()) != null){
-            isSongVoice = false;
             sr.startListening(voiceIntent);
             mDialog.setMessage("Listening...");
             mDialog.show();
@@ -411,11 +439,8 @@ public class MainActivity extends Activity {
         }
     }
 
-    public void HandleMapsClickSearchText(View view) {
 
-        EditText myTextView = (EditText)findViewById(R.id.editText);
-        ShowDirectionOnMap(myTextView.getText().toString());
-    }
+
 
     public int getContactIDFromNumber(String contactNumber)
     {
@@ -448,8 +473,6 @@ public class MainActivity extends Activity {
 
     }
 
-
-
     public void ShowDirectionOnMap(String address){
         StringBuilder strAddress =new StringBuilder();
         strAddress.append("google.navigation:q=");
@@ -467,4 +490,7 @@ public class MainActivity extends Activity {
             t.show();
         }
     }
+
+
+
 }

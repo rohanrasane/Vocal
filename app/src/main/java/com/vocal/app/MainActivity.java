@@ -67,11 +67,36 @@ public class MainActivity extends Activity {
 
     ProgressDialog mDialog = null;
 
-
     Boolean isAddressSelected = false;
 
     int mediaPlayerPausedPosition = 0;
 
+    private void ShowError(String message){
+        Toast t = Toast.makeText(getApplicationContext(),
+                "Error " + message,
+                Toast.LENGTH_SHORT);
+        t.show();
+    }
+
+    RequestInterceptor requestInterceptor = new RequestInterceptor() {
+        @Override
+        public void intercept(RequestFacade request) {
+            request.addHeader("User-Agent", "VocalApp");
+            request.addHeader("Accept", "application/json");
+            request.addHeader("X-Api-Key", API_KEY);
+            request.addHeader("Content-Type", "application/json");
+        }
+    };
+
+    private RestAdapter getRestAdaptor(){
+        RestAdapter restAdapter = new RestAdapter.Builder()
+                .setEndpoint(API_URL)
+                .setRequestInterceptor(requestInterceptor)
+                .setLogLevel(RestAdapter.LogLevel.FULL)
+                .build();
+
+        return restAdapter;
+    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -99,16 +124,13 @@ public class MainActivity extends Activity {
         sr.setRecognitionListener(new listener());
         voiceIntent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
 
-        if (voiceIntent.resolveActivity(getPackageManager()) != null) {
+        if (null != voiceIntent && voiceIntent.resolveActivity(getPackageManager()) != null) {
             voiceIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
             voiceIntent.putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE, "rohan.rasane");
             voiceIntent.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 5);
         }
         else{
-            Toast t = Toast.makeText(getApplicationContext(),
-                    "Voice Service is under maintainance ",
-                    Toast.LENGTH_SHORT);
-            t.show();
+            ShowError(getString(R.string.err_speech_maintainance));
         }
     }
 
@@ -121,27 +143,33 @@ public class MainActivity extends Activity {
         super.onDestroy();
     }
 
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+        mDialog = new ProgressDialog(this);
+        mDialog.setCancelable(false);
+    }
+
     Callback<PlayToken> callbackGetPlayToken = new Callback<PlayToken>() {
         @Override
         public void success(PlayToken o, Response response) {
-
             playToken = o.getPlay_token();
+            RestAdapter restAdapter = getRestAdaptor();
+            if(null != restAdapter) {
 
-            RestAdapter restAdapter = new RestAdapter.Builder()
-                    .setEndpoint(API_URL)
-                    .setRequestInterceptor(requestInterceptor)
-                    .setLogLevel(RestAdapter.LogLevel.FULL)
-                    .build();
-
-            EightTracksPlaySong eTracks = restAdapter.create(EightTracksPlaySong.class);
-            eTracks.contributors("json",playToken,mixesList.get(0).getId().toString(),simpleCallback);
-
-
+                EightTracksPlaySong eTracks = restAdapter.create(EightTracksPlaySong.class);
+                eTracks.contributors("json", playToken, mixesList.get(0).getId().toString(), simpleCallback);
+            }
+            else{
+                ShowError(getString(R.string.err_network_provider));
+            }
         }
 
         @Override
         public void failure(RetrofitError retrofitError) {
             mDialog.dismiss();
+            ShowError(getString(R.string.err_music_streaming));
         }
     };
 
@@ -189,6 +217,7 @@ public class MainActivity extends Activity {
         @Override
         public void failure(RetrofitError retrofitError) {
             mDialog.dismiss();
+            ShowError(getString(R.string.err_music_streaming));
         }
     };
 
@@ -197,56 +226,38 @@ public class MainActivity extends Activity {
     Callback<MyCollection> getMixesFromSearchFieldCallback = new Callback<MyCollection>() {
         @Override
         public void success(MyCollection o, Response response) {
-
             mixesList =  o.getMixes();
-
             if(mixesList == null || mixesList.size() < 1){
                 mDialog.dismiss();
-                Toast t = Toast.makeText(getApplicationContext(),
-                        "Sorry, no songs found, please try with a new keyword",
-                        Toast.LENGTH_SHORT);
-                t.show();
+                ShowError(getString(R.string.err_no_playlists_found));
             }
             else {
                 Mixes firstItem = mixesList.get(0);
-
-
                 String res = firstItem.getName();
-
                 TextView myTextView = (TextView) findViewById(R.id.textViewAlbum);
                 myTextView.setText(res);
 
+                RestAdapter restAdapter = getRestAdaptor();
+                if(null != restAdapter) {
 
-                RestAdapter restAdapter = new RestAdapter.Builder()
-                        .setEndpoint(API_URL)
-                        .setRequestInterceptor(requestInterceptor)
-                        .setLogLevel(RestAdapter.LogLevel.FULL)
-                        .build();
-
-
-                EightTracksGetPlayToken eTracks = restAdapter.create(EightTracksGetPlayToken.class);
-                eTracks.contributors("json", callbackGetPlayToken);
-
+                    EightTracksGetPlayToken eTracks = restAdapter.create(EightTracksGetPlayToken.class);
+                    eTracks.contributors("json", callbackGetPlayToken);
+                }
+                else{
+                    ShowError(getString(R.string.err_network_provider));
+                }
             }
-
         }
 
         @Override
         public void failure(RetrofitError retrofitError) {
             mDialog.dismiss();
+            ShowError(getString(R.string.err_music_streaming));
         }
     };
 
 
-    RequestInterceptor requestInterceptor = new RequestInterceptor() {
-        @Override
-        public void intercept(RequestFacade request) {
-            request.addHeader("User-Agent", "VocalApp");
-            request.addHeader("Accept", "application/json");
-            request.addHeader("X-Api-Key", API_KEY);
-            request.addHeader("Content-Type", "application/json");
-        }
-    };
+
 
     interface EightTracksGetMixes {
         @GET("/mix_sets/tags:{tag}")
@@ -268,13 +279,9 @@ public class MainActivity extends Activity {
         void contributors(@Query("format") String format,@Path("playToken")String playToken, @Query("mix_id") String id,Callback<Play> cb);
     }
 
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
-        mDialog = new ProgressDialog(this);
-        mDialog.setCancelable(false);
-    }
+
+
+
 
     class listener implements RecognitionListener
     {
@@ -301,10 +308,7 @@ public class MainActivity extends Activity {
         public void onError(int error)
         {
             Log.d(TAG, "error " + error);
-            Toast t = Toast.makeText(getApplicationContext(),
-                    "Error " + error,
-                    Toast.LENGTH_SHORT);
-            t.show();
+            ShowError(getString(error));
             mDialog.dismiss();
         }
         public void onResults(Bundle results)
@@ -345,30 +349,32 @@ public class MainActivity extends Activity {
 
     public void PlayNextSong(){
         if(null != mixesList && null != playToken) {
-            RestAdapter restAdapter = new RestAdapter.Builder()
-                    .setEndpoint(API_URL)
-                    .setRequestInterceptor(requestInterceptor)
-                    .setLogLevel(RestAdapter.LogLevel.FULL)
-                    .build();
-            EightTracksNextSong eTracks = restAdapter.create(EightTracksNextSong.class);
-            eTracks.contributors("json", playToken, mixesList.get(0).getId().toString(), simpleCallback);
+            RestAdapter restAdapter = getRestAdaptor();
+            if(null != restAdapter) {
+                EightTracksNextSong eTracks = restAdapter.create(EightTracksNextSong.class);
+                eTracks.contributors("json", playToken, mixesList.get(0).getId().toString(), simpleCallback);
+            }
+            else{
+                ShowError(getString(R.string.err_network_provider));
+            }
         }
 
     }
 
     public void PlaySearchedMusic(String strKeyword){
-        RestAdapter restAdapter = new RestAdapter.Builder()
-                .setEndpoint(API_URL)
-                .setRequestInterceptor(requestInterceptor)
-                .setLogLevel(RestAdapter.LogLevel.FULL)
-                .build();
-        EightTracksGetMixes eTracks = restAdapter.create(EightTracksGetMixes.class);
-        eTracks.contributors("json","mixes",strKeyword,getMixesFromSearchFieldCallback);
-        mDialog.setMessage("Loading...");
-        mDialog.show();
+        RestAdapter restAdapter = getRestAdaptor();
+        if(null != restAdapter) {
+            EightTracksGetMixes eTracks = restAdapter.create(EightTracksGetMixes.class);
+            eTracks.contributors("json", "mixes", strKeyword, getMixesFromSearchFieldCallback);
+            mDialog.setMessage("Loading...");
+            mDialog.show();
+        }
+        else{
+            ShowError(getString(R.string.err_network_provider));
+        }
     }
 
-    public void HandleNextSongClick(View view) {
+    public void HandleNextSongClick(View view){
         PlayNextSong();
     }
 
@@ -391,7 +397,6 @@ public class MainActivity extends Activity {
             imgView1.setVisibility(View.INVISIBLE);
         }
     }
-
 
     private void Search(String searchStr){
         if(true == isAddressSelected){
@@ -421,7 +426,13 @@ public class MainActivity extends Activity {
     public void HandleSearchOnClick(View view) {
         EditText myEditTextView = (EditText) findViewById(R.id.editText);
 
-        Search(myEditTextView.getText().toString());
+        String searchText = myEditTextView.getText().toString();
+        if(searchText.equalsIgnoreCase("")){
+            ShowError(getString(R.string.err_text_box_invalid_text));
+        }
+        else {
+            Search(myEditTextView.getText().toString());
+        }
     }
 
     public void HandleListenOnClick(View view) {
@@ -434,15 +445,9 @@ public class MainActivity extends Activity {
             Log.d(TAG, "Started Listening");
         }
         else{
-            Toast t = Toast.makeText(getApplicationContext(),
-                    "Speech Service is under maintainance ",
-                    Toast.LENGTH_SHORT);
-            t.show();
+            ShowError(getString(R.string.err_speech_maintainance));
         }
     }
-
-
-
 
     public int getContactIDFromNumber(String contactNumber)
     {
@@ -454,7 +459,6 @@ public class MainActivity extends Activity {
             phoneContactID = contactLookupCursor.getInt(contactLookupCursor.getColumnIndexOrThrow(ContactsContract.PhoneLookup._ID));
         }
         contactLookupCursor.close();
-
         return phoneContactID;
     }
 
@@ -463,36 +467,30 @@ public class MainActivity extends Activity {
 
         EditText myTextView = (EditText)findViewById(R.id.editText);
         int contactID = getContactIDFromNumber(myTextView.getText().toString());
-
-
-        Intent i = new Intent(Intent.ACTION_SENDTO, Uri.parse("content://com.android.contacts/data/" + contactID));
-                i.setType("text/plain");
-        i.setPackage("com.whatsapp");           // so that only Whatsapp reacts and not the chooser
-        i.putExtra(Intent.EXTRA_SUBJECT, "Subject");
-        i.putExtra(Intent.EXTRA_TEXT, "I'm the body.");
-        startActivity(i);
-
-
+        Intent whatsAppIntent = new Intent(Intent.ACTION_SENDTO, Uri.parse("content://com.android.contacts/data/" + contactID));
+                whatsAppIntent.setType("text/plain");
+        if(null != whatsAppIntent &&  whatsAppIntent.resolveActivity(getPackageManager()) != null) {
+            whatsAppIntent.setPackage("com.whatsapp");           // so that only Whatsapp reacts and not the chooser
+            whatsAppIntent.putExtra(Intent.EXTRA_SUBJECT, "Subject");
+            whatsAppIntent.putExtra(Intent.EXTRA_TEXT, "I'm the body.");
+            startActivity(whatsAppIntent);
+        }
+        else{
+            ShowError(getString(R.string.err_whatsapp_maintainance));
+        }
     }
 
     public void ShowDirectionOnMap(String address){
         StringBuilder strAddress =new StringBuilder();
         strAddress.append("google.navigation:q=");
         strAddress.append(address);
-        Intent intent = new Intent(android.content.Intent.ACTION_VIEW,
-                Uri.parse(strAddress.toString()));
+        Intent mapsIntent = new Intent(android.content.Intent.ACTION_VIEW,Uri.parse(strAddress.toString()));
 
-        if (intent.resolveActivity(getPackageManager()) != null) {
-            startActivity(intent);
+        if (null != mapsIntent && mapsIntent.resolveActivity(getPackageManager()) != null) {
+            startActivity(mapsIntent);
         }
         else{
-            Toast t = Toast.makeText(getApplicationContext(),
-                    "Maps Service is under maintainance ",
-                    Toast.LENGTH_SHORT);
-            t.show();
+            ShowError(getString(R.string.err_map_maintainance));
         }
     }
-
-
-
 }

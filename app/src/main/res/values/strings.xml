@@ -5,4 +5,13 @@
     <string name="hello_world">Hello world!</string>
     <string name="action_settings">Settings</string>
 
+    <!-- Error Strings-->
+    <string name="err_network_provider">Problems connecting network.</string>
+    <string name="err_map_maintainance">Maps Service is under maintainance.</string>
+    <string name="err_speech_maintainance">Speech Service is under maintainance.</string>
+    <string name="err_whatsapp_maintainance">WhatsApp Service is under maintainance.</string>
+    <string name="err_no_playlists_found">No songs found, please try with a new keyword.</string>
+    <string name="err_text_box_invalid_text">Please enter valid text in the Text Box.</string>
+    <string name="err_music_streaming">Music stream service failure.</string>
+
 </resources>

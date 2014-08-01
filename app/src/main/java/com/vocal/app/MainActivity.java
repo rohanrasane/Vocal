@@ -24,6 +24,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.vocal.app.common.Events;
 import com.vocal.app.service.songservice.SongStreamManager;
 import com.vocal.app.service.speechservice.VocalSpeechRecognizer;
 

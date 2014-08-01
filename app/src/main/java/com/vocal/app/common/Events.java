@@ -1,4 +1,4 @@
-package com.vocal.app;
+package com.vocal.app.common;
 
 /**
  * Created by rrasane on 7/31/14.

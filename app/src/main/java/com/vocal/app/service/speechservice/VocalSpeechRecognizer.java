@@ -6,7 +6,7 @@ import android.speech.RecognitionListener;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
-import com.vocal.app.Events;
+import com.vocal.app.common.Events;
 import com.vocal.app.MyApplication;
 import com.vocal.app.R;
 

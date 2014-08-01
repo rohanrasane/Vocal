@@ -3,7 +3,7 @@ package com.vocal.app.service.songservice;
 import android.content.Intent;
 import android.support.v4.content.LocalBroadcastManager;
 
-import com.vocal.app.Events;
+import com.vocal.app.common.Events;
 import com.vocal.app.MyApplication;
 import com.vocal.app.R;
 import com.vocal.app.data.Mixes;
